@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en" class="mediawiki ltr sitedir-ltr mw-hide-empty-elt skin-vector-2022 action-view">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WikiType</title>
+<link id="wiki-style" rel="stylesheet" href="https://en.wikipedia.org/w/load.php?lang=en&modules=site.styles&only=styles&skin=vector-2022">
+<style>
+  :root{
+    --accent:#3366cc;
+    --accent-dark:#2a4b8d;
+    --bg:#f6f6f6;
+    --toolbar-bg:#ffffff;
+    --border:#c8ccd1;
+    --danger:#d33;
+    --ok:#14866d;
+  }
+  *{box-sizing:border-box;}
+  html.dark-mode{background:#111;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:#202122;}
+
+  /* ---- toolbar ---- */
+  #app-toolbar{
+    position:sticky;top:0;z-index:500;background:#fff;
+    border-bottom:1px solid #a2a9b1;
+    padding:8px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  .brand{display:flex;flex-direction:column;line-height:1.15;margin-right:8px;}
+  .brand .wordmark{font-family:Georgia,'Linux Libertine',serif;font-size:21px;color:#000;white-space:nowrap;}
+  .brand .wordmark b{font-weight:700;}
+  .brand .tagline{font-size:9.5px;letter-spacing:.6px;color:#54595d;text-transform:uppercase;margin-top:1px;}
+
+  .toolbar-group{display:flex;gap:6px;align-items:center;position:relative;}
+  .search-wrap{position:relative;display:flex;align-items:center;}
+  .search-wrap .icon{position:absolute;left:9px;font-size:12px;color:#72777d;pointer-events:none;}
+  .toolbar-input{
+    border:1px solid #a2a9b1;border-radius:2px;padding:6px 10px;font-size:14px;
+    outline:none;min-width:170px;background:#fff;color:#202122;
+  }
+  .search-wrap .toolbar-input{padding-left:26px;}
+  .toolbar-input:focus{border-color:#3366cc;box-shadow:inset 0 0 0 1px #3366cc;}
+  #url-form{display:flex;gap:0;}
+  #url-form .toolbar-input{border-radius:2px 0 0 2px;border-right:none;}
+  #url-form .btn{border-radius:0 2px 2px 0;}
+
+  .btn{
+    border:1px solid #a2a9b1;background:#f8f9fa;border-radius:2px;padding:6px 12px;font-size:14px;
+    cursor:pointer;color:#202122;transition:background .15s,color .15s;white-space:nowrap;
+  }
+  .btn:hover{background:#eaecf0;}
+  .btn.primary{background:#3366cc;border-color:#3366cc;color:#fff;font-weight:600;}
+  .btn.primary:hover{background:#2a4b8d;}
+  .btn.icon{padding:6px 9px;font-size:14px;line-height:1;}
+
+  .segmented{display:flex;border:1px solid #a2a9b1;border-radius:2px;overflow:hidden;}
+  .segmented button{
+    border:none;border-left:1px solid #a2a9b1;background:#f8f9fa;padding:6px 11px;font-size:13px;cursor:pointer;color:#54595d;
+  }
+  .segmented button:first-child{border-left:none;}
+  .segmented button.active{background:#3366cc;color:#fff;}
+
+  #search-results{
+    position:absolute;top:calc(100% + 2px);left:0;background:#fff;border:1px solid #a2a9b1;
+    border-radius:2px;box-shadow:0 2px 6px rgba(0,0,0,.2);list-style:none;margin:0;padding:2px;
+    min-width:260px;max-height:320px;overflow-y:auto;z-index:600;
+  }
+  #search-results li{padding:7px 10px;font-size:14px;cursor:pointer;}
+  #search-results li:hover{background:#eaf3ff;}
+
+  #hud{display:flex;gap:10px;align-items:center;margin-left:auto;font-size:12px;color:#54595d;}
+  #stop-btn{display:flex;align-items:center;gap:6px;}
+  #stop-btn kbd{
+    font-family:inherit;font-size:10px;line-height:1;background:#fff;border:1px solid #a2a9b1;
+    border-radius:3px;padding:2px 5px;color:#54595d;
+  }
+  #hud .pill{background:#f8f9fa;border:1px solid #eaecf0;border-radius:2px;padding:4px 10px;display:flex;gap:5px;align-items:center;}
+  #hud .pill b{color:#202122;font-size:13px;}
+  #progress-track{width:110px;height:6px;background:#eaecf0;border-radius:3px;overflow:hidden;}
+  #progress-bar{height:100%;width:0%;background:#3366cc;transition:width .2s;}
+
+  #status-banner{
+    display:none;padding:8px 16px;background:#fef6f6;color:var(--danger);border-bottom:1px solid #f2c9c9;font-size:13.5px;
+  }
+  #status-banner.info{background:#eef3fc;color:var(--accent-dark);border-color:#cfe0f7;}
+  #status-banner.show{display:block;}
+
+  #instructions{
+    max-width:900px;margin:14px auto 0;padding:0 20px;font-size:13px;color:#54595d;
+  }
+
+  /* ---- article area ---- */
+  #mw-page-container{max-width:900px;margin:0 auto;padding:18px 20px 80px;}
+  #firstHeading{
+    font-family:Georgia,'Linux Libertine',serif;font-size:2em;font-weight:normal;
+    border-bottom:1px solid #a2a9b1;padding-bottom:.2em;margin-bottom:.6em;
+  }
+  #mw-content-text{background:#fff;padding:22px 26px;border-radius:4px;border:1px solid #eaecf0;}
+
+  /* typing chars */
+  .char{position:relative;opacity:.36;transition:opacity .08s,background-color .08s;scroll-margin-top:150px;}
+  .char.correct{opacity:1;}
+  .char.incorrect{opacity:1;color:var(--danger);text-decoration:underline;text-decoration-color:var(--danger);}
+  .char.current::before{
+    content:'';position:absolute;left:-1px;top:.05em;bottom:.05em;width:2px;
+    background:var(--accent);animation:caret-blink 1s steps(1) infinite;
+  }
+  @keyframes caret-blink{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+  .char.error-flash{background:#ffb3b3 !important;}
+
+  /* ---- completion modal ---- */
+  #completion-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+    align-items:center;justify-content:center;
+  }
+  #completion-overlay.show{display:flex;}
+  #completion-card{
+    background:#fff;border-radius:10px;padding:28px 32px;max-width:360px;width:90%;
+    text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);
+  }
+  #completion-card h2{margin-top:0;color:var(--ok);}
+  #completion-stats{display:flex;justify-content:center;gap:22px;margin:18px 0;}
+  #completion-stats div b{display:block;font-size:24px;color:#202122;}
+  #completion-stats div span{font-size:12px;color:#72777d;}
+  #completion-card .btn{margin:4px;}
+
+  footer.app-footer{max-width:900px;margin:0 auto;padding:0 20px 40px;font-size:12px;color:#8a8f96;text-align:center;}
+
+  /* ---- dark mode: invert everything, then re-invert media so images look normal ---- */
+  html.dark-mode #mw-page-container,
+  html.dark-mode #app-toolbar,
+  html.dark-mode #instructions,
+  html.dark-mode #completion-card{
+    filter:invert(1) hue-rotate(180deg);
+  }
+  html.dark-mode #mw-content-text,
+  html.dark-mode #firstHeading{background:#fff;}
+  html.dark-mode img,
+  html.dark-mode video,
+  html.dark-mode .mw-file-element{
+    filter:invert(1) hue-rotate(180deg);
+  }
+  html.dark-mode body{background:#111;}
+  html.dark-mode #search-results{filter:invert(1) hue-rotate(180deg);}
+
+  @media (max-width:700px){
+    #hud{margin-left:0;width:100%;justify-content:space-between;}
+    .toolbar-input{min-width:120px;}
+  }
+</style>
+</head>
+<body>
+
+  <div id="app-toolbar">
+    <div class="brand">
+      <div class="wordmark">Wiki<b>Type</b></div>
+      <div class="tagline">The Free Typing Practice</div>
+    </div>
+
+    <form id="url-form" class="toolbar-group">
+      <input id="url-input" class="toolbar-input" type="text" placeholder="Paste a Wikipedia URL or exact title…" autocomplete="off">
+      <button class="btn primary" type="submit">Go</button>
+    </form>
+
+    <div class="toolbar-group search-wrap">
+      <span class="icon">🔍</span>
+      <input id="search-input" class="toolbar-input" type="text" placeholder="Search Wikipedia…" autocomplete="off">
+      <ul id="search-results" hidden></ul>
+    </div>
+
+    <button id="random-btn" class="btn" type="button">🎲 Random</button>
+
+    <div class="segmented" id="mode-toggle">
+      <button data-mode="strict" type="button" title="Cursor won't advance until you fix a typo">Strict</button>
+      <button data-mode="forgiving" type="button" title="Typos are marked but you keep going">Forgiving</button>
+    </div>
+
+    <button id="dark-toggle" class="btn icon" type="button" title="Toggle dark mode">🌙</button>
+
+    <div id="hud">
+      <button id="stop-btn" class="btn" type="button" title="Stop and see your results">⏹ Stop <kbd>Esc</kbd></button>
+      <div class="pill">⏱ <b id="hud-time">0:00</b></div>
+      <div class="pill">WPM <b id="hud-wpm">0</b></div>
+      <div class="pill">ACC <b id="hud-acc">100%</b></div>
+      <div class="pill">
+        <div id="progress-track"><div id="progress-bar"></div></div>
+        <b id="hud-progress">0%</b>
+      </div>
+    </div>
+  </div>
+
+  <div id="status-banner"></div>
+  <p id="instructions">Just start typing to fill in the highlighted paragraph text below. Everything else — images, infoboxes, tables — is just there to look at. Click any blue link to load that article instead.</p>
+
+  <div id="mw-page-container">
+    <h1 id="firstHeading"></h1>
+    <div id="mw-content-text" class="mw-body-content"></div>
+  </div>
+
+  <footer class="app-footer">Article text and images are fetched live from Wikipedia and are © their respective contributors, CC BY-SA 4.0.</footer>
+
+  <div id="completion-overlay">
+    <div id="completion-card">
+      <h2 id="completion-heading">Nice work! 🎉</h2>
+      <div id="completion-stats">
+        <div><b id="final-wpm">0</b><span>WPM</span></div>
+        <div><b id="final-acc">100%</b><span>Accuracy</span></div>
+        <div><b id="final-time">0:00</b><span>Time</span></div>
+      </div>
+      <div>
+        <button class="btn primary" id="retry-btn" type="button">Retype Article</button>
+        <button class="btn" id="next-random-btn" type="button">Random Article</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const state = {
+    host: 'en.wikipedia.org',
+    lang: 'en',
+    targetSpans: [],
+    currentIndex: 0,
+    errors: 0,
+    correct: 0,
+    startTime: null,
+    timerInterval: null,
+    mode: localStorage.getItem('wikitype-mode') || 'forgiving',
+    finished: false,
+  };
+
+  const el = {
+    styleLink: document.getElementById('wiki-style'),
+    urlForm: document.getElementById('url-form'),
+    urlInput: document.getElementById('url-input'),
+    searchInput: document.getElementById('search-input'),
+    searchResults: document.getElementById('search-results'),
+    randomBtn: document.getElementById('random-btn'),
+    stopBtn: document.getElementById('stop-btn'),
+    nextRandomBtn: document.getElementById('next-random-btn'),
+    retryBtn: document.getElementById('retry-btn'),
+    modeToggle: document.getElementById('mode-toggle'),
+    darkToggle: document.getElementById('dark-toggle'),
+    statusBanner: document.getElementById('status-banner'),
+    heading: document.getElementById('firstHeading'),
+    content: document.getElementById('mw-content-text'),
+    hudTime: document.getElementById('hud-time'),
+    hudWpm: document.getElementById('hud-wpm'),
+    hudAcc: document.getElementById('hud-acc'),
+    hudProgress: document.getElementById('hud-progress'),
+    progressBar: document.getElementById('progress-bar'),
+    completionOverlay: document.getElementById('completion-overlay'),
+    completionHeading: document.getElementById('completion-heading'),
+    finalWpm: document.getElementById('final-wpm'),
+    finalAcc: document.getElementById('final-acc'),
+    finalTime: document.getElementById('final-time'),
+  };
+
+  // ---------------- helpers ----------------
+
+  function formatTime(totalSeconds){
+    const m = Math.floor(totalSeconds/60);
+    const s = Math.floor(totalSeconds%60);
+    return m + ':' + String(s).padStart(2,'0');
+  }
+
+  function showStatus(msg, isError){
+    el.statusBanner.textContent = msg;
+    el.statusBanner.className = 'show ' + (isError ? '' : 'info');
+    if(!isError){
+      clearTimeout(showStatus._t);
+      showStatus._t = setTimeout(hideStatus, 4000);
+    }
+  }
+  function hideStatus(){
+    el.statusBanner.className = '';
+    el.statusBanner.textContent = '';
+  }
+
+  function normalizeForTyping(text){
+    return text
+      .replace(/[‘’‚′]/g, "'")
+      .replace(/[“”„″]/g, '"')
+      .replace(/[–—]/g, '-')
+      .replace(/…/g, '...')
+      .replace(/[  -  ]/g, ' ')
+      .replace(/[​‎‏]/g, '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function fixProtocolRelative(html){
+    return html
+      .replace(/(src|href)="\/\//g, '$1="https://')
+      .replace(/srcset="([^"]*)"/g, function(m, val){
+        return 'srcset="' + val.replace(/\/\//g, 'https://') + '"';
+      })
+      .replace(/url\(\/\//g, 'url(https://');
+  }
+
+  function parseInput(raw){
+    raw = (raw || '').trim();
+    if(!raw) return null;
+    if(/wikipedia\.org/i.test(raw)){
+      let url;
+      try{
+        url = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
+      }catch(e){ return null; }
+      let title = null;
+      if(url.pathname.startsWith('/wiki/')){
+        title = decodeURIComponent(url.pathname.slice(6));
+      }else if(url.searchParams.get('title')){
+        title = url.searchParams.get('title');
+      }
+      if(!title) return null;
+      return { host: url.hostname, title: title.replace(/_/g, ' ') };
+    }
+    return { host: state.host, title: raw };
+  }
+
+  async function apiGet(host, params){
+    const qs = new URLSearchParams(Object.assign({ format:'json', formatversion:'2', origin:'*' }, params));
+    const res = await fetch('https://' + host + '/w/api.php?' + qs.toString());
+    if(!res.ok) throw new Error('network error (' + res.status + ')');
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.info || 'Wikipedia API error');
+    return data;
+  }
+
+  // ---------------- article loading ----------------
+
+  async function loadArticle(host, title){
+    showStatus('Loading "' + title + '"…', false);
+    try{
+      const data = await apiGet(host, { action:'parse', page:title, prop:'text|displaytitle', redirects:1 });
+      state.host = host;
+      state.lang = host.split('.')[0];
+      el.styleLink.href = 'https://' + host + '/w/load.php?lang=' + state.lang + '&modules=site.styles&only=styles&skin=vector-2022';
+      renderArticle(data.parse.displaytitle, data.parse.text);
+      hideStatus();
+      window.scrollTo({ top:0, behavior:'instant' });
+    }catch(err){
+      showStatus('Could not load "' + title + '" (' + err.message + '). Try a different title or paste a full Wikipedia URL.', true);
+    }
+  }
+
+  function renderArticle(displayTitle, rawHtml){
+    el.heading.innerHTML = displayTitle;
+    document.title = el.heading.textContent + ' – WikiType';
+    el.content.innerHTML = fixProtocolRelative(rawHtml);
+    postProcessLinks(el.content, state.host);
+    buildTypingTarget(el.content);
+    resetTypingState();
+  }
+
+  function postProcessLinks(container, host){
+    container.querySelectorAll('a[href]').forEach(function(a){
+      const href = a.getAttribute('href');
+      if(!href || href.startsWith('#')) return;
+
+      if(href.startsWith('/wiki/')){
+        a.addEventListener('click', function(e){
+          e.preventDefault();
+          a.blur();
+          loadArticle(host, decodeURIComponent(href.slice(6).split('#')[0]).replace(/_/g, ' '));
+        });
+        return;
+      }
+      try{
+        const u = new URL(href, 'https://' + host);
+        if(u.hostname === host && u.pathname.startsWith('/wiki/')){
+          a.addEventListener('click', function(e){
+            e.preventDefault();
+            a.blur();
+            loadArticle(host, decodeURIComponent(u.pathname.slice(6)).replace(/_/g, ' '));
+          });
+          return;
+        }
+      }catch(e){ /* not a valid absolute URL, fall through */ }
+
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+    });
+  }
+
+  function buildTypingTarget(container){
+    const paras = Array.from(container.querySelectorAll('p')).filter(function(p){
+      return !p.closest('table') && !p.closest('.thumb') && !p.closest('.gallery') &&
+             !p.closest('.reflist') && !p.closest('.navbox') && !p.closest('.hatnote') &&
+             !p.closest('.metadata');
+    });
+
+    paras.forEach(function(p){
+      const clone = p.cloneNode(true);
+      clone.querySelectorAll('sup.reference, .mw-editsection, style').forEach(function(node){ node.remove(); });
+      const text = normalizeForTyping(clone.textContent.replace(/\s+/g, ' ').trim());
+      if(!text) return;
+
+      p.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      for(const ch of text){
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = ch;
+        frag.appendChild(span);
+      }
+      p.appendChild(frag);
+    });
+
+    state.targetSpans = Array.from(container.querySelectorAll('.char'));
+  }
+
+  // ---------------- typing engine ----------------
+
+  function resetTypingState(){
+    clearInterval(state.timerInterval);
+    state.currentIndex = 0;
+    state.errors = 0;
+    state.correct = 0;
+    state.startTime = null;
+    state.finished = false;
+    state.targetSpans.forEach(function(s){ s.classList.remove('correct', 'incorrect', 'current'); });
+    if(state.targetSpans.length) state.targetSpans[0].classList.add('current');
+    el.completionOverlay.classList.remove('show');
+    updateHud();
+  }
+
+  function advance(){
+    const prev = state.targetSpans[state.currentIndex];
+    if(prev) prev.classList.remove('current');
+    state.currentIndex++;
+    if(state.currentIndex >= state.targetSpans.length){
+      finish();
+      return;
+    }
+    const next = state.targetSpans[state.currentIndex];
+    next.classList.add('current');
+    next.scrollIntoView({ block:'center', behavior:'smooth' });
+    updateHud();
+  }
+
+  function finish(){
+    state.finished = true;
+    clearInterval(state.timerInterval);
+    updateHud();
+    const completedFully = state.targetSpans.length > 0 && state.currentIndex >= state.targetSpans.length;
+    el.completionHeading.textContent = completedFully ? 'Nice work! 🎉' : "Stopped — here's how you did";
+    el.finalWpm.textContent = el.hudWpm.textContent;
+    el.finalAcc.textContent = el.hudAcc.textContent;
+    el.finalTime.textContent = el.hudTime.textContent;
+    el.completionOverlay.classList.add('show');
+  }
+
+  function updateHud(){
+    const total = state.targetSpans.length;
+    const pct = total ? Math.round((state.currentIndex / total) * 100) : 0;
+    el.progressBar.style.width = pct + '%';
+    el.hudProgress.textContent = pct + '%';
+
+    let elapsedSeconds = 0, wpm = 0;
+    if(state.startTime){
+      elapsedSeconds = (performance.now() - state.startTime) / 1000;
+      const minutes = elapsedSeconds / 60;
+      wpm = minutes > 0 ? Math.round((state.correct / 5) / minutes) : 0;
+    }
+    el.hudTime.textContent = formatTime(elapsedSeconds);
+    el.hudWpm.textContent = wpm;
+
+    const attempted = state.correct + state.errors;
+    const acc = attempted > 0 ? Math.round((state.correct / attempted) * 100) : 100;
+    el.hudAcc.textContent = acc + '%';
+  }
+
+  window.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      if(el.completionOverlay.classList.contains('show')){
+        e.preventDefault();
+        el.completionOverlay.classList.remove('show');
+      }else if(state.targetSpans.length && !state.finished){
+        e.preventDefault();
+        finish();
+      }
+      return;
+    }
+    if(state.finished || !state.targetSpans.length) return;
+    const active = document.activeElement;
+    if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+
+    if(e.key === 'Backspace'){
+      e.preventDefault();
+      if(state.mode === 'forgiving' && state.currentIndex > 0){
+        const cur = state.targetSpans[state.currentIndex];
+        if(cur) cur.classList.remove('current');
+        state.currentIndex--;
+        const span = state.targetSpans[state.currentIndex];
+        const wasCorrect = span.classList.contains('correct');
+        const wasIncorrect = span.classList.contains('incorrect');
+        if(wasCorrect) state.correct = Math.max(0, state.correct - 1);
+        if(wasIncorrect) state.errors = Math.max(0, state.errors - 1);
+        span.classList.remove('correct', 'incorrect');
+        span.classList.add('current');
+        updateHud();
+      }
+      return;
+    }
+
+    if(e.key.length !== 1) return;
+    e.preventDefault();
+
+    if(state.startTime === null){
+      state.startTime = performance.now();
+      state.timerInterval = setInterval(updateHud, 200);
+    }
+
+    const span = state.targetSpans[state.currentIndex];
+    if(!span) return;
+    const isMatch = e.key === span.textContent;
+
+    if(state.mode === 'strict'){
+      if(isMatch){
+        span.classList.add('correct');
+        state.correct++;
+        advance();
+      }else{
+        state.errors++;
+        span.classList.add('error-flash');
+        setTimeout(function(){ span.classList.remove('error-flash'); }, 150);
+        updateHud();
+      }
+    }else{
+      if(isMatch){
+        span.classList.add('correct');
+        state.correct++;
+      }else{
+        span.classList.add('incorrect');
+        state.errors++;
+      }
+      advance();
+    }
+  });
+
+  // ---------------- toolbar wiring ----------------
+
+  el.urlForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const parsed = parseInput(el.urlInput.value);
+    if(!parsed){
+      showStatus('Enter a valid Wikipedia URL or an exact article title.', true);
+      return;
+    }
+    loadArticle(parsed.host, parsed.title);
+    el.urlInput.value = '';
+  });
+
+  let searchTimer = null;
+  el.searchInput.addEventListener('input', function(){
+    clearTimeout(searchTimer);
+    const q = el.searchInput.value.trim();
+    if(!q){ el.searchResults.hidden = true; el.searchResults.innerHTML = ''; return; }
+    searchTimer = setTimeout(function(){ doSearch(q); }, 300);
+  });
+
+  async function doSearch(q){
+    try{
+      const data = await apiGet(state.host, { action:'query', list:'search', srsearch:q, srlimit:8 });
+      const hits = data.query.search || [];
+      el.searchResults.innerHTML = '';
+      if(!hits.length){ el.searchResults.hidden = true; return; }
+      hits.forEach(function(h){
+        const li = document.createElement('li');
+        li.textContent = h.title;
+        li.addEventListener('click', function(){
+          loadArticle(state.host, h.title);
+          el.searchResults.hidden = true;
+          el.searchInput.value = '';
+        });
+        el.searchResults.appendChild(li);
+      });
+      el.searchResults.hidden = false;
+    }catch(e){
+      el.searchResults.hidden = true;
+    }
+  }
+
+  document.addEventListener('click', function(e){
+    if(!el.searchResults.contains(e.target) && e.target !== el.searchInput){
+      el.searchResults.hidden = true;
+    }
+  });
+
+  async function loadRandom(){
+    try{
+      const data = await apiGet(state.host, { action:'query', list:'random', rnnamespace:0, rnlimit:1 });
+      const title = data.query.random[0].title;
+      loadArticle(state.host, title);
+    }catch(e){
+      showStatus('Could not fetch a random article.', true);
+    }
+  }
+  el.randomBtn.addEventListener('click', loadRandom);
+  el.stopBtn.addEventListener('click', function(){
+    if(state.targetSpans.length && !state.finished) finish();
+  });
+  el.nextRandomBtn.addEventListener('click', function(){
+    el.completionOverlay.classList.remove('show');
+    loadRandom();
+  });
+
+  el.retryBtn.addEventListener('click', function(){
+    resetTypingState();
+  });
+
+  el.modeToggle.addEventListener('click', function(e){
+    const btn = e.target.closest('button[data-mode]');
+    if(!btn) return;
+    state.mode = btn.dataset.mode;
+    localStorage.setItem('wikitype-mode', state.mode);
+    syncModeButtons();
+  });
+  function syncModeButtons(){
+    el.modeToggle.querySelectorAll('button[data-mode]').forEach(function(b){
+      b.classList.toggle('active', b.dataset.mode === state.mode);
+    });
+  }
+
+  el.darkToggle.addEventListener('click', function(){
+    document.documentElement.classList.toggle('dark-mode');
+    localStorage.setItem('wikitype-dark', document.documentElement.classList.contains('dark-mode') ? '1' : '0');
+  });
+
+  // ---------------- init ----------------
+
+  syncModeButtons();
+  const storedDarkPref = localStorage.getItem('wikitype-dark');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(storedDarkPref === '1' || (storedDarkPref === null && prefersDark)){
+    document.documentElement.classList.add('dark-mode');
+  }
+  loadRandom();
+
+})();
+</script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 # WikiType
 
-Type real, live Wikipedia articles — rendered with Wikipedia's own CSS, images and all — with the text lighting up as you type it correctly.
+a typing practice website where you can practice typing any wikipedia page you want
 
-A single self-contained `index.html`. No build step, no dependencies, no backend.
+
 
 ## Features
 
@@ -16,6 +16,10 @@ A single self-contained `index.html`. No build step, no dependencies, no backend
 
 ## Usage
 
+open https://syomazh.github.io/WikiType/
+
+or 
+
 Open `index.html` in any browser — double-click works, no server needed. Since it's fully client-side, it also runs fine from GitHub Pages, Cloudflare Pages, or any static host.
 
 ## How it works
@@ -26,6 +30,3 @@ Fetches article HTML and images from Wikipedia's public API (`action=parse`, ano
 
 Article text and images are © their Wikipedia contributors, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Not affiliated with the Wikimedia Foundation.
 
-## License
-
-MIT

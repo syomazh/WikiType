@@ -1,7 +1,10 @@
 # WikiType
 
+
+
 a typing practice website where you can practice typing any wikipedia page you want
 
+<img width="2560" height="1380" alt="demo" src="https://github.com/user-attachments/assets/86f67310-7a9b-4df1-bb01-f0eb3a687be4" />
 
 
 ## Features
